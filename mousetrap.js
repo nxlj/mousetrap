@@ -445,7 +445,7 @@
             throw new Error('keys must be a string or an array of strings');
         }
         let combos = bindings.split(' ');
-        combos.map(combo => {
+        return combos.map(combo => {
             let keys = _keysFromString(combo);
             return keys.map(key => {
                 let [prefix, keyName] = _splitLocationPrefix(key);
