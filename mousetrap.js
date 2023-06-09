@@ -454,7 +454,8 @@
         } else if (event.location === 2) {
             return 'r_';
         } else {
-            throw new Error('Unknown event location: ' + event.location);
+            return '';
+            // throw new Error('Unknown event location: ' + event.location);
         }
     }
 
