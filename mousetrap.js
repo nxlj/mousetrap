@@ -391,6 +391,15 @@
         return combination.split('+');
     }
 
+    function _getLocation(key) {
+        if (key.startsWith('r_')) {
+            return 2;
+        } else if (key.startsWith('l_')) {
+            return 1;
+        }
+        return 0;
+    }
+
     /**
      * Gets info for a specific key combination
      *
@@ -416,31 +425,41 @@
 
             // normalize key names
             let prefix = '';
-            if (key.startsWith('r_')) {
-                prefix = 'r_';
+            let location = _getLocation(key);
+            if (location > 0) {
+                prefix = location == 1 ? 'l_' : 'r_';
                 key = key.substring(2);
             } else if (key.startsWith('l_')) {
                 prefix = 'l_';
                 key = key.substring(2);
             }
+
             if (_SPECIAL_ALIASES[key]) {
                 key = _SPECIAL_ALIASES[key];
             }
-            key = prefix + key;
+            // key = prefix + key; // re-attach prefix
 
             // if this is not a keypress event then we should
             // be smart about using shift keys
             // this will only work for US keyboards however
             if (action && action != 'keypress' && _SHIFT_MAP[key]) {
                 key = _SHIFT_MAP[key];
-                modifiers.push('shift');
+                // if modifiers does not contain 'l_shift' or 'r_shift' then add 'shift')
+                if (!modifiers.includes('l_shift') && !modifiers.includes('r_shift')) {
+                    modifiers.push('shift');
+                }
             }
 
             // if this key is a modifier then add it to the list of modifiers
             if (_isModifier(key)) {
-                modifiers.push(key);
+                modifiers.push(prefix + key);
             }
         }
+
+        // // generalize key if it's a directional modifier (since we only track direction in the modifiers array)
+        // if (_isModifier(key) && _getLocation(key)) {
+        //     key = key.substring(2);
+        // }
 
         // depending on what the key combination is
         // we will try to pick the best event for it
@@ -577,7 +596,7 @@
             var callback;
             var matches = [];
             var action = e.type;
-            var location = e.location
+            // var location = e.location;
 
             // if there are no events related to this keycode
             if (!self._callbacks[character]) {
@@ -617,9 +636,6 @@
                 // if (_isModifier(callback.combo) && _isModifier(combination) && !_modifiersMatch([callback.combo], [combination])) {
                 //     continue;
                 // }
-                if (_isModifier(callback.key) && _isModifier(combination) && !_modifiersMatch([callback.combo], [combination])) {
-                    continue;
-                }
 
                 // if this is a keypress event and the meta key and control key
                 // are not pressed that means that we need to only look at the
@@ -926,7 +942,8 @@
 
             // remove an existing match if there is one
             // TODO: why does _getMatches remove anything???
-            _getMatches(info.key, info.modifiers, {type: info.action, location: info.location}, sequenceName, info.combination, level);
+            // _getMatches(info.key, info.modifiers, {type: info.action, location: info.location}, sequenceName, info.combination, level);
+            _getMatches(info.key, info.modifiers, {type: info.action}, sequenceName, info.combination, level);
 
             // add this call back to the array
             // if it is a sequence put it at the beginning
