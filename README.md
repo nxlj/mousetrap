@@ -1,6 +1,18 @@
 # Mousetrap
 [![CDNJS](https://img.shields.io/cdnjs/v/mousetrap.svg)](https://cdnjs.com/libraries/mousetrap)
 
+
+> Mousetrap fork with `useCapture` and `addEventListeners` options support, lone modifier detection, and eventually scoping/layers.
+```js
+// with useCapture
+const useCapture = new Mousetrap(document, true)
+// with options
+const listenerOptions = new Mousetrap(document, { capture: true })
+```
+
+---
+
+
 Mousetrap is a simple library for handling keyboard shortcuts in Javascript.
 
 It is licensed under the Apache 2.0 license.
