@@ -251,7 +251,6 @@
      * @returns {boolean}
      */
     // function _modifiersMatch(modifiers1, modifiers2) {
-    //     // TODO: update for left/right 
     //     return modifiers1.sort().join(',') === modifiers2.sort().join(',');
     // }
     /**
@@ -268,8 +267,8 @@
 
     /**
      * Function that returns a bitmap representing the modifier keys that are specified in the provided modifiers array.
-     * @param {[string]} modifiers array of strings representing modifiers (one of 'shift', 'ctrl', 'alt', 'meta') -- each with optional 'l_' or 'r_' prefixes to indicate left/right or no prefix to indicate either
-     * @returns {number} bitmap representing the modifier keys that are specified in the provided modifiers array, where the bits are ordered as follows: [r_shift, l_shift, r_ctrl, l_ctrl, r_alt, l_alt, r_meta, l_meta]
+     * @param {[string]} modifiers array of strings representing one of 'shift', 'ctrl', 'alt', 'meta' -- each with optional 'l_' or 'r_' prefixes to indicate left/right or no prefix to indicate either
+     * @returns {number} bitmap representing the modifier keys that are specified in the provided modifier array, where the bits are ordered as follows: [r_shift, l_shift, r_ctrl, l_ctrl, r_alt, l_alt, r_meta, l_meta]
      */
     function _getModifierBitmask(modifiers) {
         let bitmask = 0;
@@ -435,6 +434,15 @@
         return 0;
     }
 
+    function _splitModifierString(modifierString) {
+        if (modifierString.startsWith('l_')) {
+            return ['l_', modifierString.substring(2)];
+        } else if (modifierString.startsWith('r_')) {
+            return ['r_', modifierString.substring(2)];
+        }
+        return ['', modifierString];
+    }
+
     function _getLocationPrefix(event) {
         if (event?.location === undefined) {
             return '';
@@ -445,7 +453,6 @@
         } else {
             throw new Error('Unknown event location: ' + event.location);
         }
-        return 0;
     }
 
     /**
