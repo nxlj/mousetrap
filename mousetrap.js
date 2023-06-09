@@ -432,13 +432,13 @@
         return _belongsTo(element.parentNode, ancestor);
     }
 
-    function Mousetrap(targetElement) {
+    function Mousetrap(targetElement, options = {}) {
         var self = this;
 
         targetElement = targetElement || document;
 
         if (!(self instanceof Mousetrap)) {
-            return new Mousetrap(targetElement);
+            return new Mousetrap(targetElement, options);
         }
 
         /**
