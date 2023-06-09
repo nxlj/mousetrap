@@ -250,9 +250,42 @@
      * @param {Array} modifiers2
      * @returns {boolean}
      */
-    function _modifiersMatch(modifiers1, modifiers2) {
-        // TODO: update for left/right 
-        return modifiers1.sort().join(',') === modifiers2.sort().join(',');
+    // function _modifiersMatch(modifiers1, modifiers2) {
+    //     // TODO: update for left/right 
+    //     return modifiers1.sort().join(',') === modifiers2.sort().join(',');
+    // }
+    /**
+     * Checks if the candidate array of modifiers matches the modifiers specified by the target array
+     * considering locations if directions are specified on the candidate. Target is expected to 
+     * always have directions specified.
+     */
+    function _modifiersMatch(candidate, target) { 
+        // compare bitmasks of candidate and target and return true if all bits in candidate are set in target
+        let candidateBitmask = _getModifierBitmask(candidate);
+        let targetBitmask = _getModifierBitmask(target);
+        return (candidateBitmask & targetBitmask) === candidateBitmask;
+    }
+
+    /**
+     * Function that returns a bitmap representing the modifier keys that are specified in the provided modifiers array.
+     * @param {[string]} modifiers array of strings representing modifiers (one of 'shift', 'ctrl', 'alt', 'meta') -- each with optional 'l_' or 'r_' prefixes to indicate left/right or no prefix to indicate either
+     * @returns {number} bitmap representing the modifier keys that are specified in the provided modifiers array, where the bits are ordered as follows: [r_shift, l_shift, r_ctrl, l_ctrl, r_alt, l_alt, r_meta, l_meta]
+     */
+    function _getModifierBitmask(modifiers) {
+        let bitmask = 0;
+        for (let modifier of modifiers) {
+            let bits = _getLocationCode(modifier) || 3; // 3 to set both left and right bits
+            if (modifier.endsWith('shift')) {
+                bitmask += bits << 0;
+            } else if (modifier.endsWith('ctrl')) {
+                bitmask += bits << 2;
+            } else if (modifier.endsWith('alt')) {
+                bitmask += bits << 4;
+            } else if (modifier.endsWith('meta')) {
+                bitmask += bits << 6;
+            }
+        }
+        return bitmask;
     }
 
     /**
@@ -261,24 +294,26 @@
      * @param {Event} e
      * @returns {Array}
      */
-    // TODO: modify with location?
     function _eventModifiers(e) {
         var modifiers = [];
+        // TODO: do more granular location tracking to allow for combination of left+right modifiers
+        // right now, the last location seen from a modifier event will be used for all modifiers in the ultimate event.
+        let prefix = _getLocationPrefix(e);
 
         if (e.shiftKey) {
-            modifiers.push('shift');
+            modifiers.push(prefix + 'shift');
         }
 
         if (e.altKey) {
-            modifiers.push('alt');
+            modifiers.push(prefix + 'alt');
         }
 
         if (e.ctrlKey) {
-            modifiers.push('ctrl');
+            modifiers.push(prefix + 'ctrl');
         }
 
         if (e.metaKey) {
-            modifiers.push('meta');
+            modifiers.push(prefix + 'meta');
         }
 
         return modifiers;
@@ -391,11 +426,24 @@
         return combination.split('+');
     }
 
-    function _getLocation(key) {
+    function _getLocationCode(key) {
         if (key.startsWith('r_')) {
             return 2;
         } else if (key.startsWith('l_')) {
             return 1;
+        }
+        return 0;
+    }
+
+    function _getLocationPrefix(event) {
+        if (event?.location === undefined) {
+            return '';
+        } else if (event.location === 1) {
+            return 'l_';
+        } else if (event.location === 2) {
+            return 'r_';
+        } else {
+            throw new Error('Unknown event location: ' + event.location);
         }
         return 0;
     }
@@ -425,7 +473,7 @@
 
             // normalize key names
             let prefix = '';
-            let location = _getLocation(key);
+            let location = _getLocationCode(key);
             if (location > 0) {
                 prefix = location == 1 ? 'l_' : 'r_';
                 key = key.substring(2);
@@ -457,7 +505,7 @@
         }
 
         // // generalize key if it's a directional modifier (since we only track direction in the modifiers array)
-        // if (_isModifier(key) && _getLocation(key)) {
+        // if (_isModifier(key) && _getLocationCode(key)) {
         //     key = key.substring(2);
         // }
 
@@ -633,7 +681,7 @@
                 // if callback is a lone modifier with a location specifier that doesn't match this event
                 // if (_isModifier(callback.combo) && callback.combo == combination && callback.location !== undefined && ! (callback.location & location)) {
                 // if both callback and event keys are modifiers that don't match, keep going
-                // if (_isModifier(callback.combo) && _isModifier(combination) && !_modifiersMatch([callback.combo], [combination])) {
+                // if (_isModifier(callback.combo) && _isModifier(combination) && !_modifiersMatch([combination], [callback.combo])) {
                 //     continue;
                 // }
 
