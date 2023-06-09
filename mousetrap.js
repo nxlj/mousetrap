@@ -355,9 +355,10 @@
      * @returns {boolean}
      */
     // TODO: check for location
-    function _isModifier(key) {
-        // check if _DIRECTIONAL_MODIFIERS Set has the key
-        return _DIRECTIONAL_MODIFIERS.has(key);
+    function _isModifier(str) {
+        let key = _splitModifierString(str)[1];
+        return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
+        // return _DIRECTIONAL_MODIFIERS.has(key);
     }
 
     /**
