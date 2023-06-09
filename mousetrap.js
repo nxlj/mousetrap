@@ -886,9 +886,9 @@
         };
 
         // start!
-        _addEvent(targetElement, 'keypress', _handleKeyEvent);
-        _addEvent(targetElement, 'keydown', _handleKeyEvent);
-        _addEvent(targetElement, 'keyup', _handleKeyEvent);
+        _addEvent(targetElement, 'keypress', _handleKeyEvent, options);
+        _addEvent(targetElement, 'keydown', _handleKeyEvent, options);
+        _addEvent(targetElement, 'keyup', _handleKeyEvent, options);
     }
 
     /**
