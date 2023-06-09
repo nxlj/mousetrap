@@ -359,9 +359,6 @@
      */
     function _isModifier(str) {
         let key = _splitLocationPrefix(str)[1];
-        if (_SPECIAL_ALIASES[key]) {
-            key = _SPECIAL_ALIASES[key];
-        }
         return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
         // return _DIRECTIONAL_MODIFIERS.has(key);
     }
