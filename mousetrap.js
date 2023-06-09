@@ -144,7 +144,10 @@
      */
     var _SPECIAL_ALIASES = {
         'option': 'alt',
+        'opt': 'alt',
         'command': 'meta',
+        'cmd': 'meta',
+        'control': 'ctrl',
         'return': 'enter',
         'escape': 'esc',
         'plus': '+',
