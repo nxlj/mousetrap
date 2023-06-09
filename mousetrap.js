@@ -474,7 +474,7 @@
         keys = _keysFromString(combination);
 
         for (i = 0; i < keys.length; ++i) {
-            key = keys[i];
+            let key = keys[i];
 
             // normalize key names and get the location prefix if any
             let [prefix, key] = _splitLocationPrefix(key);
