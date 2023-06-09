@@ -475,9 +475,10 @@
 
         for (i = 0; i < keys.length; ++i) {
             let key = keys[i];
+            let prefix;
 
             // normalize key names and get the location prefix if any
-            let [prefix, key] = _splitLocationPrefix(key);
+            [prefix, key] = _splitLocationPrefix(key);
             // let prefix = '';
             // let location = _getLocationCode(key);
             // if (location > 0) {
