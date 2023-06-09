@@ -652,6 +652,40 @@ describe('Mousetrap.bind', function () {
       }
     }
   });
+
+  describe('useCapture', function () {
+    it('z key fires last, without useCapture', function () {
+      var spy = sinon.spy();
+
+      Mousetrap.bind('z', spy);
+      document.addEventListener('keypress', spy, true);
+
+      KeyEvent.simulate('Z'.charCodeAt(0), 90);
+
+      expect(spy.callCount).to.equal(2, 'callback should fire twice');
+      expect(spy.args[0][1]).to.equal(undefined, 'second argument of first event should be undefined');
+      expect(spy.args[1][1]).to.equal('z', 'second argument of second event should be key combo');
+
+      document.removeEventListener('keypress', spy, true);
+    });
+
+    it('z key fires first, with useCapture', function () {
+      var spy = sinon.spy();
+
+      const mousetrapWithCapture = new Mousetrap(document, true);
+
+      mousetrapWithCapture.bind('z', spy);
+      document.addEventListener('keypress', spy, true);
+
+      KeyEvent.simulate('Z'.charCodeAt(0), 90);
+
+      expect(spy.callCount).to.equal(2, 'callback should fire twice');
+      expect(spy.args[0][1]).to.equal('z', 'second argument of second event should be key combo');
+      expect(spy.args[1][1]).to.equal(undefined, 'second argument of first event should be undefined');
+
+      document.removeEventListener('keypress', spy, true);
+    });
+  });
 });
 
 describe('Mousetrap.unbind', function () {
