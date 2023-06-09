@@ -446,7 +446,7 @@
         }
         let combos = bindings.split(' ');
         combos.map(combo => {
-            let keys = _keysFromString(keys);
+            let keys = _keysFromString(combo);
             return keys.map(key => {
                 let [prefix, keyName] = _splitLocationPrefix(key);
                 return (_SPECIAL_ALIASES[keyName]) ? prefix + _SPECIAL_ALIASES[keyName] : key;
