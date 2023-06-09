@@ -431,6 +431,29 @@
         return combination.split('+');
     }
 
+    /**
+     * function that takes a string key combination or an array of them and converts any aliases
+     * found in _SPECIAL_ALIASES keys with their canonical form while preserving prefixes (separated by '_')
+     * @param {*} bindings 
+     */
+    function _convertKeyAliases(bindings) {
+        // if the bindings parameter is an array, call this function on each of them and return the results as an array.
+        if (Array.isArray(bindings)) {
+            return bindings.map(binding => _convertKeyAliases(binding));
+        }
+        if (typeof bindings !== 'string') {
+            throw new Error('keys must be a string or an array of strings');
+        }
+        let combos = bindings.split(' ');
+        combos.map(combo => {
+            let keys = _keysFromString(keys);
+            return keys.map(key => {
+                let [prefix, keyName] = _splitLocationPrefix(key);
+                return (_SPECIAL_ALIASES[keyName]) ? prefix + _SPECIAL_ALIASES[keyName] : key;
+            }).join('+');
+        }).join(' ');
+    }
+
     function _getLocationCode(key) {
         if (key.startsWith('r_')) {
             return 2;
@@ -1062,6 +1085,9 @@
     Mousetrap.prototype.bind = function(keys, callback, action) {
         var self = this;
         keys = keys instanceof Array ? keys : [keys];
+        // use _SPECIAL_ALIASES map to replace strings in keys
+        
+        
         self._bindMultiple.call(self, keys, callback, action);
         return self;
     };
