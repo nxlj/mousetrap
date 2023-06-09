@@ -120,6 +120,22 @@
         '|': '\\'
     };
 
+    // initialize a Set of all directional modifier options
+    var _DIRECTIONAL_MODIFIERS = new Set([
+        'shift',
+        'ctrl',
+        'alt',
+        'meta',
+        'l_shift',
+        'l_ctrl',
+        'l_alt',
+        'l_meta',
+        'r_shift',
+        'r_ctrl',
+        'r_alt',
+        'r_meta'
+    ]);
+    
     /**
      * this is a list of special strings you can use to map
      * to modifier keys when you specify your keyboard shortcuts
@@ -235,6 +251,7 @@
      * @returns {boolean}
      */
     function _modifiersMatch(modifiers1, modifiers2) {
+        // TODO: update for left/right 
         return modifiers1.sort().join(',') === modifiers2.sort().join(',');
     }
 
@@ -244,6 +261,7 @@
      * @param {Event} e
      * @returns {Array}
      */
+    // TODO: modify with location?
     function _eventModifiers(e) {
         var modifiers = [];
 
@@ -302,8 +320,10 @@
      * @param {string} key
      * @returns {boolean}
      */
+    // TODO: check for location
     function _isModifier(key) {
-        return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
+        // check if _DIRECTIONAL_MODIFIERS Set has the key
+        return _DIRECTIONAL_MODIFIERS.has(key);
     }
 
     /**
@@ -341,13 +361,14 @@
     function _pickBestAction(key, modifiers, action) {
 
         // if no action was picked in we should try to pick the one
-        // that we think would work best for this key
+        // that we think would work best for this key (basically all _MAP keys get action of 'keydown')
         if (!action) {
             action = _getReverseMap()[key] ? 'keydown' : 'keypress';
         }
 
         // modifier keys don't work as expected with keypress,
         // switch to keydown
+        // TODO: maybe need to add logic to return 'keyup' for detecting lone modifiers -> nvm: action is specified in _bindSequence for lone modifiers
         if (action == 'keypress' && modifiers.length) {
             action = 'keydown';
         }
@@ -377,6 +398,9 @@
      * @param  {string=} action
      * @returns {Object}
      */
+    // TODO: update for lone modifier specification WITH OPTIONAL DIRECTION
+    // TODO: check+set location if it's a lone modifier
+    // TODO: set action to keydown if it's a lone modifier
     function _getKeyInfo(combination, action) {
         var keys;
         var key;
@@ -391,9 +415,18 @@
             key = keys[i];
 
             // normalize key names
+            let prefix = '';
+            if (key.startsWith('r_')) {
+                prefix = 'r_';
+                key = key.substring(2);
+            } else if (key.startsWith('l_')) {
+                prefix = 'l_';
+                key = key.substring(2);
+            }
             if (_SPECIAL_ALIASES[key]) {
                 key = _SPECIAL_ALIASES[key];
             }
+            key = prefix + key;
 
             // if this is not a keypress event then we should
             // be smart about using shift keys
@@ -414,9 +447,11 @@
         action = _pickBestAction(key, modifiers, action);
 
         return {
+            combination: combination,
             key: key,
             modifiers: modifiers,
-            action: action
+            action: action,
+            // location: location,
         };
     }
 
@@ -536,11 +571,13 @@
          * @param {number=} level
          * @returns {Array}
          */
+        // TODO: update with modifier direction 
         function _getMatches(character, modifiers, e, sequenceName, combination, level) {
             var i;
             var callback;
             var matches = [];
             var action = e.type;
+            var location = e.location
 
             // if there are no events related to this keycode
             if (!self._callbacks[character]) {
@@ -551,6 +588,10 @@
             if (action == 'keyup' && _isModifier(character)) {
                 modifiers = [character];
             }
+            // // TODO maybe check against a (new var) lastHandledKey
+            // if (action == 'keyup' && lastHandledKey === [character, [character], e.location, 'keydown']) {
+            //     // lone modifier press detected
+            // }
 
             // loop through all callbacks for the key that was pressed
             // and see if any of them match
@@ -566,6 +607,17 @@
                 // if the action we are looking for doesn't match the action we got
                 // then we should keep going
                 if (action != callback.action) {
+                    continue;
+                }
+
+                // update: nvm: combination is undefined for handleKey executions
+                // if callback is a lone modifier with a location specifier that doesn't match this event
+                // if (_isModifier(callback.combo) && callback.combo == combination && callback.location !== undefined && ! (callback.location & location)) {
+                // if both callback and event keys are modifiers that don't match, keep going
+                // if (_isModifier(callback.combo) && _isModifier(combination) && !_modifiersMatch([callback.combo], [combination])) {
+                //     continue;
+                // }
+                if (_isModifier(callback.key) && _isModifier(combination) && !_modifiersMatch([callback.combo], [combination])) {
                     continue;
                 }
 
@@ -634,6 +686,8 @@
             var maxLevel = 0;
             var processedSequenceCallback = false;
 
+            // lastHandledKey = [character, modifiers, e.location, action]; // TODO: maybe unncessary
+
             // Calculate the maxLevel for sequences so we can only execute the longest callback sequence
             for (i = 0; i < callbacks.length; ++i) {
                 if (callbacks[i].seq) {
@@ -666,6 +720,7 @@
                     processedSequenceCallback = true;
 
                     // keep a list of which sequences were matches for later
+                    // TODO: update for lone modifiers?
                     doNotReset[callbacks[i].seq] = 1;
                     _fireCallback(callbacks[i].callback, e, callbacks[i].combo, callbacks[i].seq);
                     continue;
@@ -700,10 +755,11 @@
             // we ignore keypresses in a sequence that directly follow a keydown
             // for the same character
             var ignoreThisKeypress = e.type == 'keypress' && _ignoreNextKeypress;
+            // TODO: remove _isModifier check so modifiers can be used alone in sequences
             if (e.type == _nextExpectedAction && !_isModifier(character) && !ignoreThisKeypress) {
                 _resetSequences(doNotReset);
             }
-
+// TODO: search for usages of .combo (which may be a directional modifier) and maybe .key as well
             _ignoreNextKeypress = processedSequenceCallback && e.type == 'keydown';
         };
 
@@ -724,12 +780,15 @@
             var character = _characterFromEvent(e);
 
             // no character found then stop
+            // TODO: patch this for lone modifier detection? -> nvm: looks like _characterFromEvent should return 'shift'/'ctrl'/'alt'/'meta'
             if (!character) {
                 return;
             }
 
             // need to use === for the character check because the character can be 0
             if (e.type == 'keyup' && _ignoreNextKeyup === character) {
+                // consume _ignoreNextKeyup since it's been ignored
+                // TODO: need to patch this for lone modifiers? -> nvm? looks like _ignoreNextKeyup is only raised on binding trigger (_callbackAndReset)
                 _ignoreNextKeyup = false;
                 return;
             }
@@ -759,6 +818,7 @@
          * @param {string=} action
          * @returns void
          */
+        // TODO: for lone modifier detection, maybe we need to bind a sequence of 'keydown' then 'keyup' actions for the modifier)
         function _bindSequence(combo, keys, callback, action) {
 
             // start off by adding a sequence level record for this combination
@@ -811,10 +871,20 @@
             // next key in the sequence should match.  this allows a sequence
             // to mix and match keypress and keydown events depending on which
             // ones are better suited to the key provided
-            for (var i = 0; i < keys.length; ++i) {
-                var isFinal = i + 1 === keys.length;
-                var wrappedCallback = isFinal ? _callbackAndReset : _increaseSequence(action || _getKeyInfo(keys[i + 1]).action);
-                _bindSingle(keys[i], wrappedCallback, action, combo, i);
+            // TODO: check for location?
+            for (let i, sequenceLevel = 0; i < keys.length; ++i) {
+                let isFinalKey = i + 1 === keys.length;
+                // TODO: if next key is a lone modifier, need to set nextKeyAction to 'keydown'
+                let nextKeyAction = _isModifier(keys[i + 1]) ? 'keydown' : action || _getKeyInfo(keys[i + 1]).action;
+                let thisAction = action;
+                if (_isModifier(keys[i])) {
+                    // Lone modifier keys need to be split into two action binds: keydown and keyup (regardless of `action`)
+                    // Here we bind the intermediate keydown action whose next action is 'keyup'
+                    _bindSingle(keys[i], _increaseSequence('keyup'), 'keydown', combo, sequenceLevel++);
+                    thisAction = 'keyup';
+                }
+                let wrappedCallback = isFinalKey ? _callbackAndReset : _increaseSequence(nextKeyAction);
+                _bindSingle(keys[i], wrappedCallback, thisAction, combo, sequenceLevel++);
             }
         }
 
@@ -828,20 +898,22 @@
          * @param {number=} level - what part of the sequence the command is
          * @returns void
          */
+        // TODO: update with modifier direction (esp. around _callbacks)
         function _bindSingle(combination, callback, action, sequenceName, level) {
+            
+            // make sure multiple spaces in a row become a single space
+            combination = combination.replace(/\s+/g, ' ');
 
             // store a direct mapped reference for use with Mousetrap.trigger
             self._directMap[combination + ':' + action] = callback;
 
-            // make sure multiple spaces in a row become a single space
-            combination = combination.replace(/\s+/g, ' ');
-
             var sequence = combination.split(' ');
             var info;
 
-            // if this pattern is a sequence of keys then run through this method
+            // if this pattern is a sequence of keys OR a lone modifier then run through this method
             // to reprocess each pattern one key at a time
-            if (sequence.length > 1) {
+            // Checks for level === undefined to prevent infinite recursion in case of lone modifier binds. 
+            if (sequence.length > 1 || (_isModifier(sequence[0]) && level === undefined)) {
                 _bindSequence(combination, sequence, callback, action);
                 return;
             }
@@ -853,7 +925,8 @@
             self._callbacks[info.key] = self._callbacks[info.key] || [];
 
             // remove an existing match if there is one
-            _getMatches(info.key, info.modifiers, {type: info.action}, sequenceName, combination, level);
+            // TODO: why does _getMatches remove anything???
+            _getMatches(info.key, info.modifiers, {type: info.action, location: info.location}, sequenceName, info.combination, level);
 
             // add this call back to the array
             // if it is a sequence put it at the beginning
@@ -861,13 +934,15 @@
             //
             // this is important because the way these are processed expects
             // the sequence ones to come first
+            // TODO: ↑ changes needed for lone modifier "sequences" ?
             self._callbacks[info.key][sequenceName ? 'unshift' : 'push']({
                 callback: callback,
                 modifiers: info.modifiers,
+                // location: info.location,
                 action: info.action,
                 seq: sequenceName,
                 level: level,
-                combo: combination
+                combo: combination // reading `combination` from `info` since it may have been changed (e.g. l_shift -> shift) -- update: nvm? if we ambiguate modifiers, we won't be able to specify locations per modifier in a combo
             });
         }
 
