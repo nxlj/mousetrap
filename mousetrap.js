@@ -1085,9 +1085,7 @@
     Mousetrap.prototype.bind = function(keys, callback, action) {
         var self = this;
         keys = keys instanceof Array ? keys : [keys];
-        // use _SPECIAL_ALIASES map to replace strings in keys
-        
-        
+        keys = self._convertKeyAliases.call(self, keys);
         self._bindMultiple.call(self, keys, callback, action);
         return self;
     };
@@ -1111,6 +1109,7 @@
      */
     Mousetrap.prototype.unbind = function(keys, action) {
         var self = this;
+        keys = self._convertKeyAliases.call(self, keys);
         return self.bind.call(self, keys, function() {}, action);
     };
 
@@ -1123,6 +1122,7 @@
      */
     Mousetrap.prototype.trigger = function(keys, action) {
         var self = this;
+        keys = self._convertKeyAliases.call(self, keys);
         if (self._directMap[keys + ':' + action]) {
             self._directMap[keys + ':' + action]({}, keys);
         }
