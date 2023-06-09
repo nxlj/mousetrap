@@ -823,7 +823,6 @@
             if (e.type == _nextExpectedAction && !_isModifier(character) && !ignoreThisKeypress) {
                 _resetSequences(doNotReset);
             }
-// TODO: search for usages of .combo (which may be a directional modifier) and maybe .key as well
             _ignoreNextKeypress = processedSequenceCallback && e.type == 'keydown';
         };
 
@@ -874,7 +873,7 @@
         }
 
         /**
-         * binds a key sequence to an event
+         * binds a key sequence to an event, or a lone modifier press (which consists of the sequence of keydown+keyup consecutive events)
          *
          * @param {string} combo - combo specified in bind call
          * @param {Array} keys
@@ -882,7 +881,6 @@
          * @param {string=} action
          * @returns void
          */
-        // TODO: for lone modifier detection, maybe we need to bind a sequence of 'keydown' then 'keyup' actions for the modifier)
         function _bindSequence(combo, keys, callback, action) {
 
             // start off by adding a sequence level record for this combination
@@ -938,7 +936,7 @@
             // TODO: check for location?
             for (let i, sequenceLevel = 0; i < keys.length; ++i) {
                 let isFinalKey = i + 1 === keys.length;
-                // TODO: if next key is a lone modifier, need to set nextKeyAction to 'keydown'
+                // if next key is a lone modifier, set nextKeyAction to 'keydown'
                 let nextKeyAction = _isModifier(keys[i + 1]) ? 'keydown' : action || _getKeyInfo(keys[i + 1]).action;
                 let thisAction = action;
                 if (_isModifier(keys[i])) {
@@ -962,7 +960,7 @@
          * @param {number=} level - what part of the sequence the command is
          * @returns void
          */
-        // TODO: update with modifier direction (esp. around _callbacks)
+        // TODO: update with modifier location (esp. around _callbacks)
         function _bindSingle(combination, callback, action, sequenceName, level) {
             
             // make sure multiple spaces in a row become a single space
