@@ -354,9 +354,8 @@
      * @param {string} key
      * @returns {boolean}
      */
-    // TODO: check for location
     function _isModifier(str) {
-        let key = _splitModifierString(str)[1];
+        let key = _splitLocationPrefix(str)[1];
         return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
         // return _DIRECTIONAL_MODIFIERS.has(key);
     }
@@ -435,7 +434,7 @@
         return 0;
     }
 
-    function _splitModifierString(modifierString) {
+    function _splitLocationPrefix(modifierString) {
         if (modifierString.startsWith('l_')) {
             return ['l_', modifierString.substring(2)];
         } else if (modifierString.startsWith('r_')) {
@@ -463,14 +462,12 @@
      * @param  {string=} action
      * @returns {Object}
      */
-    // TODO: update for lone modifier specification WITH OPTIONAL DIRECTION
-    // TODO: check+set location if it's a lone modifier
-    // TODO: set action to keydown if it's a lone modifier
+    // TODO: set action to keydown if it's a lone modifier?
     function _getKeyInfo(combination, action) {
         var keys;
         var key;
         var i;
-        var modifiers = [];
+        var modifiers = new Set();
 
         // take the keys from this pattern and figure out what the actual
         // pattern is all about
@@ -479,16 +476,14 @@
         for (i = 0; i < keys.length; ++i) {
             key = keys[i];
 
-            // normalize key names
-            let prefix = '';
-            let location = _getLocationCode(key);
-            if (location > 0) {
-                prefix = location == 1 ? 'l_' : 'r_';
-                key = key.substring(2);
-            } else if (key.startsWith('l_')) {
-                prefix = 'l_';
-                key = key.substring(2);
-            }
+            // normalize key names and get the location prefix if any
+            let [prefix, key] = _splitLocationPrefix(key);
+            // let prefix = '';
+            // let location = _getLocationCode(key);
+            // if (location > 0) {
+            //     prefix = location == 1 ? 'l_' : 'r_';
+            //     key = key.substring(2);
+            // }
 
             if (_SPECIAL_ALIASES[key]) {
                 key = _SPECIAL_ALIASES[key];
@@ -501,14 +496,17 @@
             if (action && action != 'keypress' && _SHIFT_MAP[key]) {
                 key = _SHIFT_MAP[key];
                 // if modifiers does not contain 'l_shift' or 'r_shift' then add 'shift')
-                if (!modifiers.includes('l_shift') && !modifiers.includes('r_shift')) {
-                    modifiers.push('shift');
+                if (!modifiers.has('l_shift') && !modifiers.has('r_shift')) {
+                    modifiers.add('shift');
                 }
             }
 
-            // if this key is a modifier then add it to the list of modifiers
+            // if this key is a modifier then make sure it's in the modifier list with a location prefix if any
             if (_isModifier(key)) {
-                modifiers.push(prefix + key);
+                // remove key from modifiers if it's already there
+                modifiers.delete(key);
+                // add key with prefix if any into modifiers set
+                modifiers.add(prefix + key);
             }
         }
 
@@ -517,14 +515,16 @@
         //     key = key.substring(2);
         // }
 
+        modifiers = Array.from(modifiers);
+
         // depending on what the key combination is
         // we will try to pick the best event for it
         action = _pickBestAction(key, modifiers, action);
 
         return {
             combination: combination,
-            key: key,
-            modifiers: modifiers,
+            key: key, // if key is a modifier, it will be stripped of its location prefix if any (see `modifiers` below)
+            modifiers: modifiers, // modifiers may have location prefixes
             action: action,
             // location: location,
         };
