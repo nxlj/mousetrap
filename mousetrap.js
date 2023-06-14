@@ -192,7 +192,7 @@
      * @param {Function} callback
      * @returns void
      */
-    function _addEvent(object, type, callback, options) {
+    function _addEvent(object, type, callback, options = false) {
         if (object.addEventListener) {
             object.addEventListener(type, callback, options);
             return;
