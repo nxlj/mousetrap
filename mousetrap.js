@@ -167,14 +167,14 @@
      * loop through the f keys, f1 to f19 and add them to the map
      * programatically
      */
-    for (var i = 1; i < 20; ++i) {
+    for (var i = 1; i < 20; i++) {
         _MAP[111 + i] = 'f' + i;
     }
 
     /**
      * loop through to map numbers on the numeric keypad
      */
-    for (i = 0; i <= 9; ++i) {
+    for (i = 0; i <= 9; i++) {
 
         // This needs to use a string cause otherwise since 0 is falsey
         // mousetrap will never fire for numpad 0 pressed as part of a keydown
@@ -506,7 +506,7 @@
         // pattern is all about
         keys = _keysFromString(combination);
 
-        for (i = 0; i < keys.length; ++i) {
+        for (i = 0; i < keys.length; i++) {
             let key = keys[i];
             let prefix;
 
@@ -704,7 +704,7 @@
 
             // loop through all callbacks for the key that was pressed
             // and see if any of them match
-            for (i = 0; i < self._callbacks[character].length; ++i) {
+            for (i = 0; i < self._callbacks[character].length; i++) {
                 callback = self._callbacks[character][i];
 
                 // if a sequence name is not specified, but this is a sequence at
@@ -795,14 +795,14 @@
             // lastHandledKey = [character, modifiers, e.location, action]; // TODO: maybe unncessary
 
             // Calculate the maxLevel for sequences so we can only execute the longest callback sequence
-            for (i = 0; i < callbacks.length; ++i) {
+            for (i = 0; i < callbacks.length; i++) {
                 if (callbacks[i].seq) {
                     maxLevel = Math.max(maxLevel, callbacks[i].level);
                 }
             }
 
             // loop through matching callbacks for this key event
-            for (i = 0; i < callbacks.length; ++i) {
+            for (i = 0; i < callbacks.length; i++) {
 
                 // fire for all sequence callbacks
                 // this is because if for example you have multiple sequences
@@ -976,7 +976,7 @@
             // to mix and match keypress and keydown events depending on which
             // ones are better suited to the key provided
             // TODO: check for location?
-            for (let i, sequenceLevel = 0; i < keys.length; ++i) {
+            for (let i, sequenceLevel = 0; i < keys.length; i++) {
                 let isFinalKey = i + 1 === keys.length;
                 // if next key is a lone modifier, set nextKeyAction to 'keydown'
                 let nextKeyAction = _isModifier(keys[i + 1]) ? 'keydown' : action || _getKeyInfo(keys[i + 1]).action;
@@ -1061,7 +1061,7 @@
          * @returns void
          */
         self._bindMultiple = function(combinations, callback, action) {
-            for (var i = 0; i < combinations.length; ++i) {
+            for (var i = 0; i < combinations.length; i++) {
                 _bindSingle(combinations[i], callback, action);
             }
         };
