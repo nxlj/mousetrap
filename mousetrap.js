@@ -276,6 +276,9 @@
     function _getModifierBitmask(modifiers) {
         let bitmask = 0;
         for (let modifier of modifiers) {
+            if (_SPECIAL_ALIASES[modifier]) {
+                modifier = _SPECIAL_ALIASES[modifier];
+            }
             let bits = _getLocationCode(modifier) || 3; // 3 to set both left and right bits
             if (modifier.endsWith('shift')) {
                 bitmask += bits << 0;
