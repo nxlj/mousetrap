@@ -976,7 +976,7 @@
             // to mix and match keypress and keydown events depending on which
             // ones are better suited to the key provided
             // TODO: check for location?
-            for (let i, sequenceLevel = 0; i < keys.length; i++) {
+            for (let i = 0, sequenceLevel = 0; i < keys.length; i++) {
                 let isFinalKey = i + 1 === keys.length;
                 // if next key is a lone modifier, set nextKeyAction to 'keydown'
                 let nextKeyAction = _isModifier(keys[i + 1]) ? 'keydown' : action || _getKeyInfo(keys[i + 1]).action;
